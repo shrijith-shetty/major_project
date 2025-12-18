@@ -1,0 +1,106 @@
+# Soil System Dashboard
+
+## Overview
+
+The Soil System Dashboard is an integrated web application designed to assist farmers and agricultural professionals in making informed decisions regarding irrigation, crop selection, and fertilizer application. This project leverages machine learning models to provide recommendations based on soil properties, environmental conditions, and crop requirements.
+
+### Key Features
+
+- **Intelligent Water Recommendation System**: Utilizes a Gradient Boosting Regressor to predict the optimal volume of water required for irrigation based on crop type, soil characteristics, and seasonal needs.
+- **Crop Recommendation System**: Implements a Weighted Soft Voting Ensemble Classifier to recommend the best crop for a given piece of land based on soil and environmental factors.
+- **Fertilizer Recommendation System**: Employs a Stacking Ensemble Classifier to suggest the appropriate fertilizer based on soil properties and intended crops.
+- **Real-time Monitoring**: Displays real-time sensor data for temperature, humidity, pH, and nutrient levels.
+- **Motor Control**: Allows users to control irrigation motors and set auto modes based on soil moisture levels.
+
+## Technologies Used
+
+- **Frontend**: HTML, CSS (Bootstrap), JavaScript
+- **Backend**: Flask (Python)
+- **Machine Learning**: Scikit-learn, LightGBM, XGBoost, Pandas, NumPy
+- **Data Visualization**: Chart.js, Seaborn, Matplotlib
+
+## Installation
+
+### Prerequisites
+
+- Python 3.x
+- Node.js (for frontend dependencies, if applicable)
+- A web browser
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/soil-system-dashboard.git
+cd soil-system-dashboard
+```
+
+### Install Backend Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Install Frontend Dependencies
+
+If you have any frontend dependencies, you can install them using npm or yarn:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### Dataset
+
+Ensure that the datasets used in the project are placed in the `dataset/` directory. The following datasets are required:
+
+- `Crop_Groundwater_Irrigation_Schedule.csv`
+- `Crop_recommendation.csv`
+- `Dakshina Kannada Crop and fertilizer dataset.csv`
+
+## Usage
+
+### Running the Application
+
+To start the Flask server, run the following command:
+
+```bash
+python app.py
+```
+
+The application will be accessible at `http://127.0.0.1:5000`.
+
+### Web Interface
+
+1. **Dashboard**: View real-time sensor data and alerts.
+2. **Crop Recommendation**: Input soil and environmental data to receive crop recommendations.
+3. **Fertilizer Recommendation**: Get suggestions for fertilizers based on soil properties.
+4. **Water Management**: Control irrigation motors and view water history.
+
+### Machine Learning Models
+
+- **Water Recommendation Model**: Trained using a Gradient Boosting Regressor to predict water volume for irrigation.
+- **Crop Recommendation Model**: Uses a Weighted Soft Voting Ensemble Classifier for crop selection.
+- **Fertilizer Recommendation Model**: Implements a Stacking Ensemble Classifier for fertilizer suggestions.
+
+## Contributing
+
+Contributions are welcome! If you have suggestions for improvements or new features, please fork the repository and submit a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Special thanks to the contributors and libraries that made this project possible.
+- Inspired by the need for precision agriculture and sustainable farming practices.
+
+## Contact
+
+For any inquiries or feedback, please reach out to [your-email@example.com](mailto:your-email@example.com).
+```
+
+### Notes:
+- Replace `yourusername` and `your-email@example.com` with your actual GitHub username and email address.
+- Adjust any sections as necessary to fit your project's specifics, especially the installation and usage instructions based on how your application is structured.
