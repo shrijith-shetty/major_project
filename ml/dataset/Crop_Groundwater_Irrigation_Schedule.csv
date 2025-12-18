@@ -1,0 +1,23 @@
+Crop,Typical Soil Type,Seasonal Water Requirement (mm/season),Season Length (days),Irrigation Frequency (days),Number of Irrigations (per season),Volume per Irrigation (L/ha),Pump Runtime per Irrigation (hrs/ha) at 15 L/s,Recommended Method
+apple,Loam,1050,365,9,41,256097.6,4.74,Basin / Drip
+banana,Clay Loam,1700,365,12,31,548387.1,10.16,Drip / Basin
+blackgram,Loam,475,90,9,10,475000.0,8.8,Sprinkler
+chickpea,Sandy,350,90,4,23,152173.9,2.82,Drip
+coconut,Sandy,2000,365,4,92,217391.3,4.03,Basin / Drip
+coffee,Loam,1600,365,9,41,390243.9,7.23,Shade + Drip
+cotton,Clay Loam,1000,150,12,13,769230.8,14.25,Flood / Drip
+grapes,Sandy Loam,600,240,6,40,150000.0,2.78,Drip
+jute,Clay,1750,120,12,10,1750000.0,32.41,Flood
+kidneybeans,Loam,500,120,9,14,357142.9,6.61,Sprinkler
+lentil,Sandy Loam,375,100,6,17,220588.2,4.08,Drip
+maize,Loam,650,110,9,13,500000.0,9.26,Sprinkler / Drip
+mango,Loam,950,365,9,41,231707.3,4.29,Basin / Drip
+mothbeans,Sandy,250,80,4,20,125000.0,2.31,Drip
+mungbean,Loam,475,90,9,10,475000.0,8.8,Sprinkler
+muskmelon,Sandy,500,90,4,23,217391.3,4.03,Drip / Sprinkler
+orange,Loam,700,365,9,41,170731.7,3.16,Basin / Drip
+papaya,Loam,1750,365,9,41,426829.3,7.9,Drip / Basin
+pigeonpeas,Sandy Loam,800,150,6,25,320000.0,5.93,Drip / Sprinkler
+pomegranate,Loam,800,365,9,41,195122.0,3.61,Drip
+rice,Clay,1350,120,12,10,1350000.0,25.0,Flood / Drip
+watermelon,Sandy,500,90,4,23,217391.3,4.03,Drip / Sprinkler

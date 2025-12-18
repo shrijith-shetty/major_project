@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌱 Soil System Dashboard</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css"
+    />
+
+    <style>
+      body {
+        display: flex;
+        height: 100vh;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      .sidebar {
+        width: 220px;
+        background-color: #2e7d32;
+        color: white;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+      .sidebar h3 {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .sidebar a {
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        margin: 8px 0;
+        padding: 12px;
+        border-radius: 8px;
+        transition: background 0.2s;
+      }
+      .sidebar a:hover,
+      .sidebar a.active {
+        background-color: #1b5e20;
+      }
+      .main {
+        flex-grow: 1;
+        padding: 25px;
+        background-color: #f1f8e9;
+        overflow-y: auto;
+        position: relative;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .view-container {
+        display: none;
+      }
+      .view-container.active {
+        display: block;
+      }
+      .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.08);
+      }
+      .result-card {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #e8f5e9;
+        text-align: center;
+        border: 2px dashed #2e7d32;
+        display: none;
+      }
+      .note-card {
+        background-color: #fffde7;
+        border-left: 5px solid #f9a825;
+      }
+      .advisory-card {
+        background-color: #e3f2fd;
+        border-left: 5px solid #1e88e5;
+      }
+      .forecast-card {
+        background-color: #e8f5e9;
+        border-left: 5px solid #4caf50;
+      }
+      .status-good {
+        border-left: 5px solid #4caf50;
+      }
+      .status-warn {
+        border-left: 5px solid #ffc107;
+      }
+      .status-crit {
+        border-left: 5px solid #dc3545;
+      }
+      .flow-display {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2e7d32;
+      }
+      .motor-status-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 10px;
+      }
+      .motor-on {
+        background-color: #4caf50;
+        animation: pulse 1.5s infinite;
+      }
+      .motor-off {
+        background-color: #dc3545;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      /* ML PREDICTION NOTIFICATION */
+      .ml-prediction-box {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 420px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        z-index: 9999;
+        display: none;
+        animation: slideIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(500px) scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(500px) scale(0.8);
+          opacity: 0;
+        }
+      }
+
+      .ml-prediction-box.show {
+        display: block;
+      }
+      .ml-prediction-box.hiding {
+        animation: slideOut 0.5s ease-in forwards;
+      }
+
+      .ml-prediction-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .ml-prediction-header .title-section {
+        display: flex;
+        align-items: center;
+      }
+
+      .ml-prediction-header i {
+        font-size: 28px;
+        margin-right: 12px;
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .ml-close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+      }
+
+      .ml-close-btn:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .ml-prediction-content {
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .ml-prediction-crop {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 15px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .ml-prediction-confidence {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 12px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 15px 0;
+        backdrop-filter: blur(10px);
+      }
+
+      .ml-progress-bar {
+        background: rgba(255, 255, 255, 0.3);
+        height: 8px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .ml-progress-fill {
+        background: linear-gradient(90deg, #4caf50, #8bc34a);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1s ease-out;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      }
+
+      .ml-timer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 13px;
+        opacity: 0.9;
+      }
+
+      .water-tank-container {
+        position: relative;
+        width: 180px;
+        height: 200px;
+        margin: 0 auto;
+      }
+      .water-tank {
+        width: 120px;
+        height: 180px;
+        border: 4px solid #2e7d32;
+        border-radius: 0 0 20px 20px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 100%);
+        margin: 0 auto;
+      }
+      .water-level {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background: linear-gradient(to top, #1976d2, #42a5f5);
+        transition: height 0.5s ease;
+      }
+      .water-wave {
+        position: absolute;
+        width: 200%;
+        height: 100%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.3) 20%,
+          transparent 20%
+        );
+        animation: wave 3s linear infinite;
+      }
+      @keyframes wave {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+      .tank-label {
+        text-align: center;
+        font-weight: bold;
+        color: #2e7d32;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+      .tank-percentage {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-weight: bold;
+        color: #1565c0;
+        z-index: 10;
+        text-shadow: 0 0 3px white;
+      }
+      .crop-card {
+        padding: 15px;
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+      }
+      .crop-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      }
+      .crop-percentage {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+      .market-badge {
+        font-size: 0.9rem;
+      }
+      .fertilizer-detail-card {
+        border-left: 4px solid #4caf50;
+        background: #f1f8e9;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ml-prediction-box" class="ml-prediction-box">
+      <div class="ml-prediction-header">
+        <div class="title-section">
+          <i class="bi bi-cpu-fill"></i>
+          <span>ML Crop Prediction</span>
+        </div>
+        <button class="ml-close-btn" onclick="closeMLPrediction()">×</button>
+      </div>
+      <div class="ml-prediction-content">
+        <p style="margin-bottom: 10px">🌾 Based on current NPK values:</p>
+        <div class="ml-prediction-crop" id="ml-crop-name">PADDY</div>
+        <div class="ml-prediction-confidence">
+          <div>
+            <strong>Confidence:</strong> <span id="ml-confidence">95%</span>
+          </div>
+          <div class="ml-progress-bar">
+            <div
+              class="ml-progress-fill"
+              id="ml-progress"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+        <p style="font-size: 13px; margin-top: 10px">
+          <strong>Market Price:</strong> ₹<span id="ml-price">2200</span
+          >/quintal<br />
+          <strong>Demand:</strong> <span id="ml-demand">High</span>
+        </p>
+        <div class="ml-timer">
+          <i class="bi bi-clock"></i> Auto-closing in
+          <span id="ml-countdown">20</span>s
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <h3>🌱 Soil System</h3>
+      <a id="nav-dashboard" onclick="showPage('dashboard')" class="active"
+        >Dashboard</a
+      >
+      <a id="nav-sensor_history" onclick="showPage('sensor_history')"
+        >Sensor History</a
+      >
+      <a id="nav-crop" onclick="showPage('crop')">Crop Recommend</a>
+      <a id="nav-fertilizer" onclick="showPage('fertilizer')">Fertilizer</a>
+      <a id="nav-pump" onclick="showPage('pump')">Motor Control</a>
+      <a id="nav-water_history" onclick="showPage('water_history')"
+        >Water History</a
+      >
+      <a id="nav-status" onclick="showPage('status')">Crop Status</a>
+    </div>
+
+    <div class="main">
+      <div id="dashboard-page" class="page active">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h1 class="mb-0 text-success">Live Farm Status</h1>
+          <div class="text-end">
+            <h5 class="text-muted mb-0">Weather (Mangaluru)</h5>
+            <p id="weather-indicator" class="mb-0 fs-5">--</p>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-4">
+          <div class="row align-items-center">
+            <div class="col-md-3">
+              <label for="monitor-crop-selection" class="form-label fw-bold"
+                >Select Primary Crop</label
+              >
+              <select id="monitor-crop-selection" class="form-select">
+                <option value="paddy" selected>Paddy (Rice)</option>
+                <option value="maize">Maize</option>
+                <option value="cotton">Cotton</option>
+                <option value="wheat">Wheat</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="monitor-planting-date" class="form-label fw-bold"
+                >Planting Date</label
+              >
+              <input
+                type="date"
+                id="monitor-planting-date"
+                class="form-control"
+              />
+            </div>
+            <div class="col-md-3">
+              <div class="water-tank-container">
+                <div class="water-tank">
+                  <div class="tank-percentage" id="tank-percentage">--</div>
+                  <div class="water-level" id="water-level">
+                    <div class="water-wave"></div>
+                  </div>
+                </div>
+                <div class="tank-label" id="tank-label">-- L / -- L</div>
+              </div>
+            </div>
+            <div class="col-md-3 text-end">
+              <h5 class="text-muted mb-0">Live Date & Time</h5>
+              <p id="live-date-time" class="mb-0 fs-5">--</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="card-title text-danger">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>Critical
+                  Alerts
+                </h5>
+                <ul id="alerts-list" class="list-group list-group-flush">
+                  <li class="list-group-item text-muted">
+                    No critical alerts.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title text-success">
+                  <i class="bi bi-star-fill me-2"></i>Primary Crop Overview
+                </h5>
+                <div id="primary-crop-overview" class="text-center p-3">
+                  <p class="text-muted">
+                    Select a crop and planting date above.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div id="temp-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Temperature</h6>
+                    <p id="temp-value" class="fs-3 fw-bold text-success mb-0">
+                      -- °C
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div id="humidity-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Humidity</h6>
+                    <p
+                      id="humidity-value"
+                      class="fs-3 fw-bold text-success mb-0"
+                    >
+                      -- %
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div id="ph-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Soil pH</h6>
+                    <p id="ph-value" class="fs-3 fw-bold text-success mb-0">
+                      --
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div id="n-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Nitrogen (N)</h6>
+                    <p id="n-value" class="fs-3 fw-bold text-success mb-0">
+                      -- ppm
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div id="p-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Phosphorus (P)</h6>
+                    <p id="p-value" class="fs-3 fw-bold text-success mb-0">
+                      -- ppm
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div id="k-card" class="card text-center h-100">
+                  <div
+                    class="card-body d-flex flex-column justify-content-center"
+                  >
+                    <h6 class="card-subtitle text-muted">Potassium (K)</h6>
+                    <p id="k-value" class="fs-3 fw-bold text-success mb-0">
+                      -- ppm
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sensor_history-page" class="page">
+        <h1 class="mb-4 text-success">Sensor Reading History</h1>
+        <div class="btn-group mb-4">
+          <button id="show-graph-btn" class="btn btn-outline-success active">
+            Graph</button
+          ><button id="show-table-btn" class="btn btn-outline-success">
+            Table
+          </button>
+        </div>
+        <div id="graph-view" class="view-container active">
+          <div class="card p-3"><canvas id="historyChart"></canvas></div>
+        </div>
+        <div id="table-view" class="view-container">
+          <div class="card p-3">
+            <div class="table-responsive" style="max-height: 65vh">
+              <table class="table table-striped">
+                <thead class="table-success">
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Temp</th>
+                    <th>Humidity</th>
+                    <th>pH</th>
+                    <th>N</th>
+                    <th>P</th>
+                    <th>K</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="crop-page" class="page">
+        <h1 class="mb-4 text-success">Top 4 Crop Recommendations</h1>
+        <div class="card p-4">
+          <form id="crop-recommendation-form">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Nitrogen (N)</label
+                ><input type="number" name="N" class="form-control" required />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Phosphorus (P)</label
+                ><input type="number" name="P" class="form-control" required />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Potassium (K)</label
+                ><input type="number" name="K" class="form-control" required />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Temperature</label
+                ><input
+                  type="number"
+                  step="0.1"
+                  name="temperature"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Humidity</label
+                ><input
+                  type="number"
+                  step="0.1"
+                  name="humidity"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">pH</label
+                ><input
+                  type="number"
+                  step="0.1"
+                  name="ph"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Rainfall (mm)</label
+                ><input
+                  type="number"
+                  step="0.1"
+                  name="rainfall"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-success btn-lg">
+                Get Recommendations
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="crop-result-display" class="mt-4" style="display: none">
+          <div class="row g-4">
+            <div class="col-md-5">
+              <div class="card p-3">
+                <h5 class="text-center mb-3">Suitability Analysis</h5>
+                <canvas id="cropPieChart"></canvas>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div id="crop-cards-container" class="row g-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fertilizer-page" class="page">
+        <h1 class="mb-4 text-success">Detailed Fertilizer Recommendation</h1>
+        <div class="card p-4">
+          <form id="fertilizer-recommendation-form">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label>Nitrogen</label
+                ><input
+                  type="number"
+                  name="Nitrogen"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label>Phosphorus</label
+                ><input
+                  type="number"
+                  name="Phosphorus"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label>Potassium</label
+                ><input
+                  type="number"
+                  name="Potassium"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label>pH</label
+                ><input
+                  type="number"
+                  step="0.1"
+                  name="pH"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label>Rainfall</label
+                ><input
+                  type="number"
+                  name="Rainfall"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label>Temperature</label
+                ><input
+                  type="number"
+                  name="Temperature"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label>Soil Color</label
+                ><select name="Soil_color" class="form-select" required>
+                  <option value="">--Select--</option>
+                  <option value="Black">Black</option>
+                  <option value="Red">Red</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label>Crop</label
+                ><select name="Crop" class="form-select" required>
+                  <option value="">--Select--</option>
+                  <option value="Sugarcane">Sugarcane</option>
+                  <option value="Cotton">Cotton</option>
+                  <option value="Millets">Millets</option>
+                  <option value="Paddy">Paddy</option>
+                  <option value="Pulses">Pulses</option>
+                  <option value="Groundnut">Groundnut</option>
+                  <option value="Tobacco">Tobacco</option>
+                  <option value="Maize">Maize</option>
+                </select>
+              </div>
+            </div>
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-success btn-lg px-5">
+                Get Detailed Recommendation
+              </button>
+            </div>
+          </form>
+        </div>
+        <div id="fertilizer-result-display" class="mt-4" style="display: none">
+          <div id="fertilizer-cards-container"></div>
+        </div>
+      </div>
+
+      <div id="pump-page" class="page">
+        <h1 class="mb-4 text-success">Live Motor & Water Flow Control</h1>
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-4">
+            <div class="card p-4 text-center">
+              <h5 class="card-title mb-3">
+                <i class="bi bi-speedometer2 me-2"></i>Current Flow Rate
+              </h5>
+              <p id="live-flow-rate" class="flow-display mb-0">0.00 L/min</p>
+              <small class="text-muted mt-2">Real-time sensor reading</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card p-4 text-center">
+              <h5 class="card-title mb-3">
+                <i class="bi bi-droplet-fill me-2"></i>Session Volume
+              </h5>
+              <p id="live-total-volume" class="flow-display mb-0">0.00 L</p>
+              <small class="text-muted mt-2">Current session total</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card p-4 text-center">
+              <h5 class="card-title mb-3">
+                <i class="bi bi-clock-history me-2"></i>Session Duration
+              </h5>
+              <p id="session-duration" class="flow-display mb-0">00:00</p>
+              <small class="text-muted mt-2">Minutes:Seconds</small>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 border-top pt-3">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="auto-mode-toggle"
+            />
+            <label class="form-check-label" for="auto-mode-toggle">
+              Enable Auto Irrigation (run motor 3s when soil is dry)
+            </label>
+          </div>
+          <p id="auto-mode-status" class="text-muted mt-2 mb-0">
+            Auto mode: OFF
+          </p>
+        </div>
+
+        <div class="card p-4 shadow-sm">
+          <div class="card-body">
+            <h3 class="card-title">Water Pump Management</h3>
+            <p class="card-text text-muted">
+              Control irrigation motor and monitor real-time water flow from
+              Arduino sensor.
+            </p>
+            <div class="d-grid gap-3 d-md-flex mt-4">
+              <button
+                id="start-motor-btn"
+                class="btn btn-primary btn-lg flex-grow-1"
+              >
+                <i class="bi bi-play-fill me-2"></i>Start Motor
+              </button>
+              <button
+                id="stop-motor-btn"
+                class="btn btn-danger btn-lg flex-grow-1"
+              >
+                <i class="bi bi-stop-fill me-2"></i>Stop Motor
+              </button>
+            </div>
+            <div
+              id="motor-status-display"
+              class="mt-4 fs-4 text-center p-3 rounded bg-light"
+            >
+              <span
+                class="motor-status-indicator motor-off"
+                id="motor-indicator"
+              ></span>
+              <strong>Motor Status:</strong>
+              <span id="motor-status-text" class="badge bg-secondary">OFF</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="water_history-page" class="page">
+        <h1 class="mb-4 text-success">Water Irrigation History</h1>
+        <div class="btn-group mb-4">
+          <button
+            id="show-water-graph-btn"
+            class="btn btn-outline-success active"
+          >
+            Graph
+          </button>
+          <button id="show-water-table-btn" class="btn btn-outline-success">
+            Table
+          </button>
+        </div>
+        <div id="water-graph-view" class="view-container active">
+          <div class="card p-3"><canvas id="waterHistoryChart"></canvas></div>
+        </div>
+        <div id="water-table-view" class="view-container">
+          <div class="card p-3">
+            <div class="table-responsive" style="max-height: 65vh">
+              <table class="table table-striped">
+                <thead class="table-success">
+                  <tr>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (min)</th>
+                    <th>Volume (L)</th>
+                  </tr>
+                </thead>
+                <tbody id="water-history-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="status-page" class="page">
+        <h1 class="mb-4 text-success">Manual Crop Status & Yield Forecast</h1>
+        <div class="card p-4">
+          <form id="status-form">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-3">
+                <label for="crop-selection" class="form-label"
+                  >Select Crop</label
+                >
+                <select id="crop-selection" class="form-select" required>
+                  <option value="">--Choose--</option>
+                  <option value="paddy">Paddy</option>
+                  <option value="maize">Maize</option>
+                  <option value="cotton">Cotton</option>
+                  <option value="wheat">Wheat</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="planting-date">Planting Date</label>
+                <input
+                  type="date"
+                  id="planting-date"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="land-acres">Land Size (Acres)</label>
+                <input
+                  type="number"
+                  id="land-acres"
+                  class="form-control"
+                  step="0.1"
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <button type="submit" class="btn btn-success w-100">
+                  Check Status
+                </button>
+              </div>
+            </div>
+          </form>
+          <div
+            id="status-error-message"
+            class="alert alert-danger mt-3"
+            style="display: none"
+          ></div>
+        </div>
+
+        <div id="status-result-display" class="mt-4" style="display: none">
+          <div class="row g-4">
+            <div class="col-lg-5">
+              <div class="card">
+                <img
+                  id="status-plant-image"
+                  src=""
+                  style="
+                    width: 100%;
+                    height: 350px;
+                    object-fit: cover;
+                    border-radius: 15px;
+                  "
+                  alt="Crop"
+                />
+              </div>
+            </div>
+            <div class="col-lg-7">
+              <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                  <h3 id="status-title">Current Crop Vitals</h3>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                      <strong>Plant Age:</strong
+                      ><span id="status-plant-age" class="badge bg-primary"
+                        >--</span
+                      >
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                      <strong>Stage:</strong
+                      ><span id="status-plant-stage">--</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                      <strong>Water Volume:</strong
+                      ><span
+                        id="status-water-volume"
+                        class="fw-bold text-success"
+                        >--</span
+                      >
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                      <strong>Irrigation Frequency:</strong
+                      ><span id="status-irrigation-frequency">--</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                      <strong>Nutrients:</strong
+                      ><span id="status-nutrient-needs">--</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="card forecast-card mb-4">
+                <div class="card-body">
+                  <h5 class="card-title text-success">Harvest Forecast</h5>
+                  <p class="mb-1">
+                    <strong>Harvest Date:</strong>
+                    <span id="status-harvest-date">--</span>
+                  </p>
+                  <p class="mb-0">
+                    <strong>Estimated Yield:</strong>
+                    <span id="status-yield" class="fw-bold">--</span>
+                  </p>
+                </div>
+              </div>
+              <div class="card advisory-card mb-4">
+                <div class="card-body">
+                  <h5 class="card-title text-primary">Weather Advisory</h5>
+                  <p id="status-weather-note" class="mb-0">--</p>
+                </div>
+              </div>
+              <div class="card note-card">
+                <div class="card-body">
+                  <h5 class="card-title text-warning">Farmer's Note</h5>
+                  <p id="status-farmer-note" class="mb-0">--</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   <script>
+// ================== GLOBALS ==================
+console.log("✅ JS file loaded");
+
+// const API_BASE_URL = window.location.origin;
+// While developing, hard-code your Flask URL:
+const API_BASE_URL = "http://127.0.0.1:5000";
+
+let historyChart, waterHistoryChart, cropPieChart;
+let motorSessionStart = null;
+let mlPredictionTimer = null;
+let mlCountdownInterval = null;
+let mlPredictionAutoTrigger = null;
+
+// --------- helpers ----------
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = value;
+}
+
+function setStyle(id, prop, value) {
+  const el = document.getElementById(id);
+  if (el) el.style[prop] = value;
+}
+
+// ================== PAGE NAVIGATION ==================
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".sidebar a").forEach((a) => a.classList.remove("active"));
+
+  const page = document.getElementById(pageId + "-page");
+  const nav = document.getElementById("nav-" + pageId);
+  if (page) page.classList.add("active");
+  if (nav) nav.classList.add("active");
+
+  if (pageId === "sensor_history") fetchSensorHistory();
+  if (pageId === "water_history") fetchWaterHistory();
+  if (pageId === "crop") populateCropFormFromLatest();
+
+}
+
+// ================== AUTO MODE UI ==================
+function updateAutoModeUI(isOn) {
+  const toggle = document.getElementById("auto-mode-toggle");
+  const label = document.getElementById("auto-mode-status");
+  if (!toggle || !label) return;
+
+  toggle.checked = isOn;
+  label.textContent = isOn
+    ? "Auto mode: ON (will run motor for 3s when soil is dry)"
+    : "Auto mode: OFF";
+}
+
+async function fetchAutoMode() {
+  try {
+    const r = await fetch(`${API_BASE_URL}/api/auto_mode`);
+    const data = await r.json();
+    updateAutoModeUI(!!data.auto_mode);
+  } catch (e) {
+    console.error("Failed to fetch auto mode", e);
+  }
+}
+
+async function setAutoMode(enabled) {
+  try {
+    const r = await fetch(`${API_BASE_URL}/api/auto_mode`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    });
+    const data = await r.json();
+    updateAutoModeUI(!!data.auto_mode);
+  } catch (e) {
+    console.error("Failed to set auto mode", e);
+  }
+}
+
+// ================== SENSOR CARDS (DASHBOARD) ==================
+function updateSensorCards(reading, status) {
+  const fields = {
+    temp: "°C",
+    humidity: "%",
+    ph: "",
+    n: "ppm",
+    p: "ppm",
+    k: "ppm",
+  };
+
+  status = status || {};
+
+  for (const [key, unit] of Object.entries(fields)) {
+    const card = document.getElementById(`${key}-card`);
+    const valueEl = document.getElementById(`${key}-value`);
+    if (!card || !valueEl) continue;
+
+    let val = reading ? reading[key] : null;
+
+    // handle moisture → humidity mapping if needed
+    if (
+      key === "humidity" &&
+      (val === undefined || val === null) &&
+      reading &&
+      reading.moisture !== undefined
+    ) {
+      val = reading.moisture;
+    }
+
+    if (val !== undefined && val !== null) {
+      valueEl.innerText = `${val} ${unit}`.trim();
+    } else {
+      valueEl.innerText = `-- ${unit}`.trim();
+    }
+
+    card.classList.remove("status-good", "status-warn", "status-crit");
+    if (status[key] === "good") card.classList.add("status-good");
+    else if (status[key] === "warn") card.classList.add("status-warn");
+    else if (status[key] === "crit") card.classList.add("status-crit");
+  }
+}
+
+async function updateDashboard() {
+  console.log("🟢 updateDashboard() called");
+  try {
+    const cropSel = document.getElementById("monitor-crop-selection");
+    const dateInput = document.getElementById("monitor-planting-date");
+
+    if (!cropSel || !dateInput) {
+      console.warn("monitor-crop-selection or monitor-planting-date not found");
+      return;
+    }
+
+    const crop = cropSel.value || "paddy";
+    const date = dateInput.value;
+
+    let data;
+
+    if (!date) {
+      // If no planting date selected, just use latest_reading
+      const r = await fetch(`${API_BASE_URL}/api/latest_reading`, {
+        cache: "no-cache",
+      });
+      const latest = await r.json();
+      console.log("🔍 /api/latest_reading response (no date):", latest);
+
+      // If backend sends {error: "..."} show in alerts so you can see it on UI
+      if (latest && latest.error) {
+        data = {
+          latest_reading: {},
+          alerts: [latest.error],
+          crop_info: null,
+          status: {},
+          water_tank: {},
+        };
+      } else {
+        data = {
+          latest_reading: latest || {},
+          alerts: ["Set planting date to see crop stage & tank status."],
+          crop_info: null,
+          status: {},
+          water_tank: {},
+        };
+      }
+    } else {
+      const r = await fetch(
+        `${API_BASE_URL}/api/dashboard_summary?crop=${encodeURIComponent(
+          crop
+        )}&date=${encodeURIComponent(date)}`,
+        { cache: "no-cache" }
+      );
+      data = await r.json();
+      console.log("📊 /api/dashboard_summary response:", data);
+    }
+
+    if (!data) {
+      console.warn("No dashboard data");
+      return;
+    }
+
+    if (data.error) {
+      console.error("dashboard_summary error:", data.error);
+    }
+
+    const latest = data.latest_reading || {};
+    const cropInfo = data.crop_info || {};
+    const water = data.water_tank || {};
+    const status = data.status || {};
+
+    console.log("📈 Using latest reading for cards:", latest);
+
+    // Update the 6 sensor cards
+    updateSensorCards(latest, status);
+
+    // Alerts
+    const alertsList = document.getElementById("alerts-list");
+    if (alertsList) {
+      alertsList.innerHTML = "";
+      const alerts = data.alerts || [];
+      if (alerts.length === 0) {
+        alertsList.innerHTML =
+          '<li class="list-group-item text-muted">No critical alerts.</li>';
+      } else {
+        alerts.forEach((msg) => {
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+          li.innerText = msg;
+          alertsList.appendChild(li);
+        });
+      }
+    }
+
+    // Primary crop overview
+    const overview = document.getElementById("primary-crop-overview");
+    if (overview) {
+      if (!cropInfo || !cropInfo.stage) {
+        overview.innerHTML =
+          '<p class="text-muted">Select a crop and planting date above.</p>';
+      } else {
+        overview.innerHTML = `
+          <h5>${cropInfo.name}</h5>
+          <p class="mb-1"><strong>Age:</strong> ${cropInfo.age} days</p>
+          <p class="mb-1"><strong>Stage:</strong> ${
+            cropInfo.stage.name || "-"
+          }</p>
+          <p class="mb-1"><strong>Irrigation:</strong> ${
+            cropInfo.stage.irrigation_frequency || "-"
+          }</p>
+          <p class="mb-0"><strong>Nutrients:</strong> ${
+            cropInfo.stage.nutrient_needs || "-"
+          }</p>
+        `;
+      }
+    }
+
+    // ✅ Water tank gauge (safe against undefined / string values)
+    try {
+      const cap = water && water.capacity != null ? Number(water.capacity) : 0;
+      const cur =
+        water && water.current != null ? Number(water.current) : undefined;
+
+      if (cap > 0 && typeof cur === "number" && !Number.isNaN(cur)) {
+        const pct = Math.max(0, Math.min(100, (cur / cap) * 100));
+        setStyle("water-level", "height", pct + "%");
+        setText("tank-percentage", Math.round(pct) + "%");
+        setText(
+          "tank-label",
+          `${cur.toFixed(2)} L / ${cap.toFixed(2)} L`
+        );
+      } else {
+        setStyle("water-level", "height", "0%");
+        setText("tank-percentage", "--");
+        setText("tank-label", "-- L / -- L");
+      }
+    } catch (e) {
+      console.error("Water tank render error:", e);
+      setStyle("water-level", "height", "0%");
+      setText("tank-percentage", "--");
+      setText("tank-label", "-- L / -- L");
+    }
+  } catch (err) {
+    console.error("updateDashboard error:", err);
+  }
+}
+
+
+// ================== SENSOR HISTORY ==================
+function fetchSensorHistory() {
+  fetch(`${API_BASE_URL}/api/sensor_history`)
+    .then((response) => response.json())
+    .then((data) => {
+      const tableBody = document.getElementById("history-table-body");
+      if (tableBody) {
+        tableBody.innerHTML = "";
+        data.forEach((row) => {
+          tableBody.innerHTML += `<tr>
+            <td>${new Date(row.timestamp).toLocaleString()}</td>
+            <td>${row.temp}</td>
+            <td>${row.humidity}</td>
+            <td>${row.ph}</td>
+            <td>${row.n}</td>
+            <td>${row.p}</td>
+            <td>${row.k}</td>
+          </tr>`;
+        });
+      }
+
+      const canvas = document.getElementById("historyChart");
+      if (!canvas) return;
+
+      if (historyChart) historyChart.destroy();
+      const ctx = canvas.getContext("2d");
+      historyChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: data.map((r) =>
+            new Date(r.timestamp).toLocaleTimeString()
+          ),
+          datasets: [
+            {
+              label: "Temp",
+              data: data.map((r) => r.temp),
+              borderColor: "#dc3545",
+              fill: false,
+              yAxisID: "y-temp",
+            },
+            {
+              label: "Humidity",
+              data: data.map((r) => r.humidity),
+              borderColor: "#0d6efd",
+              fill: false,
+              yAxisID: "y-hum",
+            },
+            {
+              label: "pH",
+              data: data.map((r) => r.ph),
+              borderColor: "#198754",
+              fill: false,
+              yAxisID: "y-ph",
+            },
+            {
+              label: "N",
+              data: data.map((r) => r.n),
+              borderColor: "#ffc107",
+              fill: false,
+              yAxisID: "y-npk",
+            },
+            {
+              label: "P",
+              data: data.map((r) => r.p),
+              borderColor: "#fd7e14",
+              fill: false,
+              yAxisID: "y-npk",
+            },
+            {
+              label: "K",
+              data: data.map((r) => r.k),
+              borderColor: "#6f42c1",
+              fill: false,
+              yAxisID: "y-npk",
+            },
+          ],
+        },
+        options: {
+          scales: {
+            "y-temp": {
+              position: "left",
+              title: { display: true, text: "Temp (°C)" },
+            },
+            "y-hum": {
+              position: "right",
+              title: { display: true, text: "Humidity (%)" },
+            },
+            "y-ph": { display: false },
+            "y-npk": { display: false },
+          },
+        },
+      });
+    });
+}
+
+// ================== WATER HISTORY ==================
+function fetchWaterHistory() {
+  fetch(`${API_BASE_URL}/api/water_history`)
+    .then((response) => response.json())
+    .then((data) => {
+      const tableBody = document.getElementById("water-history-table-body");
+      if (tableBody) {
+        tableBody.innerHTML = "";
+        data.forEach((row) => {
+          tableBody.innerHTML += `<tr>
+            <td>${new Date(row.start_time).toLocaleString()}</td>
+            <td>${new Date(row.end_time).toLocaleString()}</td>
+            <td>${row.duration_minutes.toFixed(2)}</td>
+            <td>${row.total_volume.toFixed(2)}</td>
+          </tr>`;
+        });
+      }
+
+      const canvas = document.getElementById("waterHistoryChart");
+      if (!canvas) return;
+
+      if (waterHistoryChart) waterHistoryChart.destroy();
+      const ctx = canvas.getContext("2d");
+      waterHistoryChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: data.map((r) =>
+            new Date(r.start_time).toLocaleDateString()
+          ),
+          datasets: [
+            {
+              label: "Water Volume (L)",
+              data: data.map((r) => r.total_volume),
+              backgroundColor: "#1e88e5",
+            },
+          ],
+        },
+      });
+    });
+}
+
+// ================== MOTOR STATUS & CONTROL ==================
+function updateMotorStatus(data) {
+  if (!data) return;
+
+  setText(
+    "live-flow-rate",
+    `${(data.flow_rate || 0).toFixed(2)} L/min`
+  );
+  setText(
+    "live-total-volume",
+    `${(data.total_volume || 0).toFixed(2)} L`
+  );
+
+  const indicator = document.getElementById("motor-indicator");
+  const statusText = document.getElementById("motor-status-text");
+
+  if (indicator && statusText) {
+    if (data.motor_on) {
+      if (!motorSessionStart) motorSessionStart = Date.now();
+      indicator.className = "motor-status-indicator motor-on";
+      statusText.className = "badge bg-success";
+      statusText.innerText = "ON";
+    } else {
+      motorSessionStart = null;
+      setText("session-duration", "00:00");
+      indicator.className = "motor-status-indicator motor-off";
+      statusText.className = "badge bg-secondary";
+      statusText.innerText = "OFF";
+    }
+  }
+
+  if (typeof data.auto_mode !== "undefined") {
+    updateAutoModeUI(!!data.auto_mode);
+  }
+}
+
+async function refreshMotorStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/motor_status`);
+    const data = await res.json();
+    updateMotorStatus(data);
+  } catch (err) {
+    console.error("motor_status error:", err);
+  }
+}
+
+async function sendMotorCommand(command) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/motor`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command }),
+    });
+    const data = await res.json();
+    updateMotorStatus(data);
+  } catch (err) {
+    console.error("motor control error:", err);
+  }
+}
+
+// ================== ML PREDICTION POPUP ==================
+function showMLPrediction(cropData) {
+  const box = document.getElementById("ml-prediction-box");
+  if (!box || !cropData || !cropData.recommendations) return;
+
+  const topCrop = cropData.recommendations[0];
+  if (!topCrop) return;
+
+  document.getElementById("ml-crop-name").innerText =
+    topCrop.crop.toUpperCase();
+  document.getElementById("ml-confidence").innerText =
+    Math.round(topCrop.probability * 100) + "%";
+  document.getElementById("ml-price").innerText = topCrop.market_price;
+  document.getElementById("ml-demand").innerText = topCrop.demand;
+
+  box.classList.remove("hiding");
+  box.classList.add("show");
+
+  setTimeout(() => {
+    document.getElementById("ml-progress").style.width =
+      Math.round(topCrop.probability * 100) + "%";
+  }, 100);
+
+  let countdown = 20;
+  document.getElementById("ml-countdown").innerText = countdown;
+
+  if (mlCountdownInterval) clearInterval(mlCountdownInterval);
+  mlCountdownInterval = setInterval(() => {
+    countdown--;
+    document.getElementById("ml-countdown").innerText = countdown;
+    if (countdown <= 0) {
+      clearInterval(mlCountdownInterval);
+      closeMLPrediction();
+    }
+  }, 1000);
+
+  if (mlPredictionTimer) clearTimeout(mlPredictionTimer);
+  mlPredictionTimer = setTimeout(() => {
+    closeMLPrediction();
+  }, 20000);
+}
+
+function closeMLPrediction() {
+  const box = document.getElementById("ml-prediction-box");
+  if (!box) return;
+
+  box.classList.add("hiding");
+
+  if (mlPredictionTimer) clearTimeout(mlPredictionTimer);
+  if (mlCountdownInterval) clearInterval(mlCountdownInterval);
+
+  setTimeout(() => {
+    box.classList.remove("show", "hiding");
+    document.getElementById("ml-progress").style.width = "0%";
+  }, 500);
+}
+
+function startMLAutoPrediction() {
+  if (mlPredictionAutoTrigger) clearInterval(mlPredictionAutoTrigger);
+
+  mlPredictionAutoTrigger = setInterval(() => {
+    const dash = document.getElementById("dashboard-page");
+    if (!dash || !dash.classList.contains("active")) return;
+
+    fetch(`${API_BASE_URL}/api/latest_reading`)
+      .then((r) => r.json())
+      .then((sensorData) => {
+        if (sensorData && !sensorData.error) {
+          const predictionData = {
+            N: sensorData.n,
+            P: sensorData.p,
+            K: sensorData.k,
+            temperature: sensorData.temp,
+            humidity: sensorData.humidity,
+            ph: sensorData.ph,
+            rainfall: 100,
+          };
+
+          fetch(`${API_BASE_URL}/api/recommend_crop`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(predictionData),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              showMLPrediction(result);
+            });
+        }
+      });
+  }, 20000);
+}
+
+// ================== FORMS (CROP / FERTILIZER / STATUS) ==================
+function wireForms() {
+  const cropForm = document.getElementById("crop-recommendation-form");
+  if (cropForm) {
+    cropForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      fetch(`${API_BASE_URL}/api/recommend_crop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          const resultDisplay = document.getElementById(
+            "crop-result-display"
+          );
+          const cardsContainer = document.getElementById(
+            "crop-cards-container"
+          );
+          const pieCanvas = document.getElementById("cropPieChart");
+
+          if (!resultDisplay || !cardsContainer || !pieCanvas) return;
+
+          cardsContainer.innerHTML = "";
+          result.recommendations.forEach((rec) => {
+            cardsContainer.innerHTML += `
+              <div class="col-12">
+                <div class="card crop-card">
+                  <div class="row align-items-center">
+                    <div class="col-3">
+                      <p class="crop-percentage text-success">
+                        ${Math.round(rec.probability * 100)}%
+                      </p>
+                    </div>
+                    <div class="col-6">
+                      <h5>${rec.crop}</h5>
+                      <p class="mb-0 text-muted">
+                        Market Price: ₹${rec.market_price}/quintal
+                      </p>
+                    </div>
+                    <div class="col-3 text-end">
+                      <span class="badge bg-primary market-badge">
+                        ${rec.demand}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+
+          if (cropPieChart) cropPieChart.destroy();
+          const pieCtx = pieCanvas.getContext("2d");
+          cropPieChart = new Chart(pieCtx, {
+            type: "doughnut",
+            data: {
+              labels: result.recommendations.map((r) => r.crop),
+              datasets: [
+                {
+                  data: result.recommendations.map((r) => r.probability),
+                  backgroundColor: [
+                    "#2e7d32",
+                    "#4caf50",
+                    "#81c784",
+                    "#a5d6a7",
+                  ],
+                },
+              ],
+            },
+          });
+
+          resultDisplay.style.display = "block";
+          showMLPrediction(result);
+        });
+    });
+  }
+
+  const fertForm = document.getElementById(
+    "fertilizer-recommendation-form"
+  );
+  if (fertForm) {
+    fertForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      fetch(`${API_BASE_URL}/api/recommend_fertilizer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          const resultDisplay = document.getElementById(
+            "fertilizer-result-display"
+          );
+          const container = document.getElementById(
+            "fertilizer-cards-container"
+          );
+          if (!resultDisplay || !container) return;
+
+          container.innerHTML = `
+            <div class="card fertilizer-detail-card p-3">
+              <h4>Primary Recommendation:
+                <span class="text-success">${result.recommendation}</span>
+              </h4>
+              <p class="mb-1"><strong>Reasoning:</strong> ${result.reasoning}</p>
+              <p><strong>Application:</strong> ${result.application_method}</p>
+            </div>
+          `;
+          resultDisplay.style.display = "block";
+        });
+    });
+  }
+
+  const statusForm = document.getElementById("status-form");
+  if (statusForm) {
+    statusForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const crop = document.getElementById("crop-selection").value;
+      const date = document.getElementById("planting-date").value;
+      const acres = document.getElementById("land-acres").value;
+
+      fetch(
+        `${API_BASE_URL}/api/crop_status?crop=${crop}&date=${date}&acres=${acres}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          const errBox = document.getElementById("status-error-message");
+          const resultBox = document.getElementById("status-result-display");
+          if (data.error) {
+            if (errBox) {
+              errBox.innerText = data.error;
+              errBox.style.display = "block";
+            }
+            if (resultBox) resultBox.style.display = "none";
+          } else {
+            if (errBox) errBox.style.display = "none";
+            if (resultBox) resultBox.style.display = "block";
+
+            setText("status-title", `Vitals for ${data.name}`);
+            const img = document.getElementById("status-plant-image");
+            if (img) img.src = data.image_url;
+
+            setText("status-plant-age", `${data.age} days`);
+            setText("status-plant-stage", data.current_stage.name);
+            setText(
+              "status-water-volume",
+              `${data.current_stage.water_liters_per_acre} L/acre`
+            );
+            setText(
+              "status-irrigation-frequency",
+              data.current_stage.irrigation_frequency
+            );
+            setText(
+              "status-nutrient-needs",
+              data.current_stage.nutrient_needs
+            );
+            setText("status-harvest-date", data.harvest_date);
+            setText(
+              "status-yield",
+              `${data.estimated_yield_per_acre} quintals/acre`
+            );
+            setText("status-weather-note", data.weather_advisory);
+            setText("status-farmer-note", data.farmer_note);
+          }
+        });
+    });
+  }
+
+  // Motor control buttons
+  const startBtn = document.getElementById("start-motor-btn");
+  const stopBtn = document.getElementById("stop-motor-btn");
+  const autoToggle = document.getElementById("auto-mode-toggle");
+
+  if (startBtn) {
+    startBtn.addEventListener("click", () => sendMotorCommand("START"));
+  }
+  if (stopBtn) {
+    stopBtn.addEventListener("click", () => sendMotorCommand("STOP"));
+  }
+  if (autoToggle) {
+    autoToggle.addEventListener("change", (e) => setAutoMode(e.target.checked));
+  }
+}
+
+// ================== SENSOR/WATER TOGGLE BUTTONS ==================
+function wireHistoryToggles() {
+  const showGraphBtn = document.getElementById("show-graph-btn");
+  const showTableBtn = document.getElementById("show-table-btn");
+  const graphView = document.getElementById("graph-view");
+  const tableView = document.getElementById("table-view");
+
+  if (showGraphBtn && showTableBtn && graphView && tableView) {
+    showGraphBtn.addEventListener("click", () => {
+      graphView.classList.add("active");
+      tableView.classList.remove("active");
+      showGraphBtn.classList.add("active");
+      showTableBtn.classList.remove("active");
+    });
+
+    showTableBtn.addEventListener("click", () => {
+      graphView.classList.remove("active");
+      tableView.classList.add("active");
+      showGraphBtn.classList.remove("active");
+      showTableBtn.classList.add("active");
+    });
+  }
+
+  const showWaterGraphBtn = document.getElementById(
+    "show-water-graph-btn"
+  );
+  const showWaterTableBtn = document.getElementById(
+    "show-water-table-btn"
+  );
+  const waterGraphView = document.getElementById("water-graph-view");
+  const waterTableView = document.getElementById("water-table-view");
+
+  if (
+    showWaterGraphBtn &&
+    showWaterTableBtn &&
+    waterGraphView &&
+    waterTableView
+  ) {
+    showWaterGraphBtn.addEventListener("click", () => {
+      waterGraphView.classList.add("active");
+      waterTableView.classList.remove("active");
+      showWaterGraphBtn.classList.add("active");
+      showWaterTableBtn.classList.remove("active");
+    });
+
+    showWaterTableBtn.addEventListener("click", () => {
+      waterGraphView.classList.remove("active");
+      waterTableView.classList.add("active");
+      showWaterGraphBtn.classList.remove("active");
+      showWaterTableBtn.classList.add("active");
+    });
+  }
+}
+
+// ================== LIVE CLOCK ==================
+function startLiveClock() {
+  const el = document.getElementById("live-date-time");
+  if (!el) return;
+  setInterval(() => {
+    const now = new Date();
+    el.innerText = now.toLocaleString();
+  }, 1000);
+}
+
+// ================== MAIN INIT ==================
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🔥 DOMContentLoaded fired, init starting");
+
+  // Dashboard init
+  updateDashboard();
+  setInterval(updateDashboard, 5000); // every 5s
+
+  // When crop or date changes, refresh dashboard
+  const cropSel = document.getElementById("monitor-crop-selection");
+  const dateInput = document.getElementById("monitor-planting-date");
+  if (cropSel) cropSel.addEventListener("change", updateDashboard);
+  if (dateInput) dateInput.addEventListener("change", updateDashboard);
+
+  // Motor status polling etc...
+  refreshMotorStatus();
+  setInterval(() => {
+    refreshMotorStatus();
+    if (motorSessionStart) {
+      const elapsed = Math.floor((Date.now() - motorSessionStart) / 1000);
+      const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+      const secs = String(elapsed % 60).padStart(2, "0");
+      setText("session-duration", `${mins}:${secs}`);
+    }
+  }, 1000);
+
+  // Start ML popup auto prediction
+  startMLAutoPrediction();
+
+  // Wire forms & toggles
+  wireForms();
+  wireHistoryToggles();
+  fetchAutoMode();
+  startLiveClock();
+});
+function updateCropUI(data) {
+  const container = document.getElementById("crop-cards-container");
+  container.innerHTML = "";
+
+  data.top_crops.forEach((c) => {
+    container.innerHTML += `
+      <div class="col-md-6">
+        <div class="crop-card">
+          <h4>${c.crop}</h4>
+          <p class="crop-percentage">${c.score}% suitability</p>
+        </div>
+      </div>`;
+  });
+}
+function populateCropFormFromLatest() {
+  const form = document.getElementById("crop-recommendation-form");
+  if (!form) return;
+
+  fetch(`${API_BASE_URL}/api/latest_reading`)
+    .then((r) => r.json())
+    .then((sensor) => {
+      console.log("Latest sensor for crop form:", sensor);
+      if (!sensor || sensor.error) return;
+
+      // Safely fill each field if present
+      if (form.elements["N"] && sensor.n != null) {
+        form.elements["N"].value = sensor.n;
+      }
+      if (form.elements["P"] && sensor.p != null) {
+        form.elements["P"].value = sensor.p;
+      }
+      if (form.elements["K"] && sensor.k != null) {
+        form.elements["K"].value = sensor.k;
+      }
+      if (form.elements["temperature"] && sensor.temp != null) {
+        form.elements["temperature"].value = sensor.temp;
+      }
+      if (form.elements["humidity"]) {
+        const hum = sensor.humidity ?? sensor.moisture;
+        if (hum != null) form.elements["humidity"].value = hum;
+      }
+      if (form.elements["ph"] && sensor.ph != null) {
+        form.elements["ph"].value = sensor.ph;
+      }
+
+      // Default rainfall (you can change this)
+      if (form.elements["rainfall"]) {
+        form.elements["rainfall"].value = 100;
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to populate crop form:", err);
+    });
+}
+
+</script>
+
+
+  </body>
+</html>

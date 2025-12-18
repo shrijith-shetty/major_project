@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Sensor History</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- All CSS Styles -->
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .sidebar {
+            width: 220px;
+            background-color: #2e7d32;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #1b5e20;
+        }
+
+        .main {
+            flex-grow: 1;
+            padding: 25px;
+            background-color: #f1f8e9;
+            overflow-y: auto;
+        }
+
+        /* View containers */
+        .view-container {
+            display: none; /* Hide all views by default */
+        }
+        .view-container.active {
+            display: block; /* Show only the active view */
+        }
+        
+        .table-responsive {
+            max-height: 65vh; /* Limit table height and make it scrollable */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h3>🌱 Soil System</h3>
+        <a href="#">Dashboard</a>
+        <a href="#" class="active">History</a>
+        <a href="#">Fertilizer</a>
+        <a href="#">Pump</a>
+        <hr>
+        <a href="#">🤖 AI Assistant</a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0 text-success">Sensor History</h1>
+            <div>
+                <!-- Download Button -->
+                <button id="download-btn" class="btn btn-success">Download as Excel</button>
+            </div>
+        </div>
+
+        <!-- View Toggle Buttons -->
+        <div class="btn-group mb-4" role="group">
+            <button id="show-graph-btn" type="button" class="btn btn-outline-success active">Graph View</button>
+            <button id="show-table-btn" type="button" class="btn btn-outline-success">Table View</button>
+        </div>
+
+        <!-- Graph View Container -->
+        <div id="graph-view" class="view-container active">
+            <div class="card p-3 shadow-sm">
+                <canvas id="historyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Table View Container -->
+        <div id="table-view" class="view-container">
+            <div class="card p-3 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Temp (°C)</th>
+                                <th>Humidity (%)</th>
+                                <th>pH</th>
+                                <th>N</th>
+                                <th>P</th>
+                                <th>K</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- Data will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- All JavaScript Logic -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            // --- Sample Data (In a real app, this would come from fetch('/history')) ---
+            const historicalData = [
+                { timestamp: '2025-10-01 12:00', temp: 28.5, humidity: 71, ph: 6.8, n: 85, p: 52, k: 48 },
+                { timestamp: '2025-10-01 13:00', temp: 29.1, humidity: 69, ph: 6.8, n: 84, p: 52, k: 47 },
+                { timestamp: '2025-10-01 14:00', temp: 29.5, humidity: 68, ph: 6.7, n: 82, p: 51, k: 47 },
+                { timestamp: '2025-10-01 15:00', temp: 29.2, humidity: 70, ph: 6.7, n: 83, p: 51, k: 46 },
+                { timestamp: '2025-10-01 16:00', temp: 28.8, humidity: 72, ph: 6.8, n: 84, p: 52, k: 48 },
+                { timestamp: '2025-10-01 17:00', temp: 28.1, humidity: 74, ph: 6.9, n: 85, p: 53, k: 49 },
+                { timestamp: '2025-10-01 18:00', temp: 27.6, humidity: 75, ph: 6.9, n: 86, p: 53, k: 50 },
+            ];
+
+            // --- Get references to HTML elements ---
+            const graphView = document.getElementById('graph-view');
+            const tableView = document.getElementById('table-view');
+            const showGraphBtn = document.getElementById('show-graph-btn');
+            const showTableBtn = document.getElementById('show-table-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const tableBody = document.getElementById('history-table-body');
+            let historyChart = null;
+
+            // --- Function to render the line chart ---
+            function renderChart() {
+                const ctx = document.getElementById('historyChart').getContext('2d');
+                
+                if (historyChart) {
+                    historyChart.destroy(); // Clear old chart before drawing a new one
+                }
+
+                historyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: historicalData.map(d => d.timestamp),
+                        datasets: [
+                            {
+                                label: 'Temperature (°C)',
+                                data: historicalData.map(d => d.temp),
+                                borderColor: '#dc3545', // Red
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Humidity (%)',
+                                data: historicalData.map(d => d.humidity),
+                                borderColor: '#0d6efd', // Blue
+                                tension: 0.1
+                            },
+                             {
+                                label: 'Soil pH',
+                                data: historicalData.map(d => d.ph),
+                                borderColor: '#ffc107', // Yellow
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Sensor Readings Over Time' }
+                        }
+                    }
+                });
+            }
+
+            // --- Function to populate the data table ---
+            function populateTable() {
+                tableBody.innerHTML = ''; // Clear existing rows
+                historicalData.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.timestamp}</td>
+                        <td>${row.temp}</td>
+                        <td>${row.humidity}</td>
+                        <td>${row.ph}</td>
+                        <td>${row.n}</td>
+                        <td>${row.p}</td>
+                        <td>${row.k}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            // --- Event Listeners for view toggling ---
+            showGraphBtn.addEventListener('click', () => {
+                tableView.classList.remove('active');
+                graphView.classList.add('active');
+                showTableBtn.classList.remove('active');
+                showGraphBtn.classList.add('active');
+            });
+
+            showTableBtn.addEventListener('click', () => {
+                graphView.classList.remove('active');
+                tableView.classList.add('active');
+                showGraphBtn.classList.remove('active');
+                showTableBtn.classList.add('active');
+            });
+
+            // --- Event Listener for downloading data ---
+            downloadBtn.addEventListener('click', () => {
+                // 1. Define CSV headers
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Timestamp,Temperature,Humidity,pH,Nitrogen,Phosphorus,Potassium\r\n";
+
+                // 2. Add each row of data
+                historicalData.forEach(row => {
+                    let csvRow = `${row.timestamp},${row.temp},${row.humidity},${row.ph},${row.n},${row.p},${row.k}`;
+                    csvContent += csvRow + "\r\n";
+                });
+                
+                // 3. Create a link and trigger the download
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "sensor_history.csv");
+                document.body.appendChild(link); // Required for Firefox
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // --- Initial Load ---
+            renderChart();
+            populateTable();
+        });
+    </script>
+</body>
+</html>

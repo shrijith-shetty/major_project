@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Irrigation History</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .sidebar {
+            width: 220px;
+            background-color: #2e7d32;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #1b5e20;
+        }
+
+        .main {
+            flex-grow: 1;
+            padding: 25px;
+            background-color: #f1f8e9;
+            overflow-y: auto;
+        }
+
+        /* View containers for toggling */
+        .view-container { display: none; }
+        .view-container.active { display: block; }
+        
+        .table-responsive { max-height: 65vh; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h3>🌱 Soil System</h3>
+        <a href="#">Dashboard</a>
+        <a href="#" class="active">History</a> <a href="#">Fertilizer</a>
+        <a href="#">Pump</a>
+        <hr>
+        <a href="#">🤖 AI Assistant</a>
+    </div>
+
+    <div class="main">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0 text-success">Water Irrigation History</h1>
+            <button id="download-btn" class="btn btn-success">Download as Excel</button>
+        </div>
+
+        <div class="btn-group mb-4" role="group">
+            <button id="show-graph-btn" type="button" class="btn btn-outline-success active">Graph View</button>
+            <button id="show-table-btn" type="button" class="btn btn-outline-success">Table View</button>
+        </div>
+
+        <div id="graph-view" class="view-container active">
+            <div class="card p-3 shadow-sm"><canvas id="historyChart"></canvas></div>
+        </div>
+
+        <div id="table-view" class="view-container">
+            <div class="card p-3 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Date</th>
+                                <th>Crop Irrigated</th>
+                                <th>Duration (Minutes)</th>
+                                <th>Volume (Litres/ha)</th>
+                                <th>Soil Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const pastWateringEvents = [
+                { date: '2025-09-15', crop: 'Sugarcane', duration_minutes: 210, volume_liters: 769230, soil: 'Clay Loam' },
+                { date: '2025-09-18', crop: 'Cotton', duration_minutes: 180, volume_liters: 769230, soil: 'Clay Loam' },
+                { date: '2025-09-21', crop: 'Grapes', duration_minutes: 45, volume_liters: 150000, soil: 'Sandy Loam' },
+                { date: '2025-09-24', crop: 'Maize', duration_minutes: 150, volume_liters: 625000, soil: 'Loam' },
+                { date: '2025-09-27', crop: 'Sugarcane', duration_minutes: 215, volume_liters: 769230, soil: 'Clay Loam' }
+            ];
+
+            const graphView = document.getElementById('graph-view');
+            const tableView = document.getElementById('table-view');
+            const showGraphBtn = document.getElementById('show-graph-btn');
+            const showTableBtn = document.getElementById('show-table-btn');
+            const downloadBtn = document.getElementById('download-btn');
+
+            let historyChart = null;
+
+            function renderChart() {
+                const ctx = document.getElementById('historyChart').getContext('2d');
+                if (historyChart) historyChart.destroy();
+                historyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: pastWateringEvents.map(d => `${d.date} (${d.crop})`),
+                        datasets: [{
+                            label: 'Water Volume (Litres per hectare)',
+                            data: pastWateringEvents.map(d => d.volume_liters),
+                            backgroundColor: '#2e7d32',
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+
+            function populateTable() {
+                const tableBody = document.getElementById('history-table-body');
+                tableBody.innerHTML = '';
+                pastWateringEvents.forEach(row => {
+                    tableBody.innerHTML += `<tr><td>${row.date}</td><td>${row.crop}</td><td>${row.duration_minutes}</td><td>${row.volume_liters.toLocaleString()}</td><td>${row.soil}</td></tr>`;
+                });
+            }
+
+            showGraphBtn.addEventListener('click', () => {
+                tableView.classList.remove('active');
+                graphView.classList.add('active');
+                showTableBtn.classList.remove('active');
+                showGraphBtn.classList.add('active');
+            });
+
+            showTableBtn.addEventListener('click', () => {
+                graphView.classList.remove('active');
+                tableView.classList.add('active');
+                showGraphBtn.classList.remove('active');
+                showTableBtn.classList.add('active');
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                let csvContent = "data:text/csv;charset=utf-8,Date,Crop Irrigated,Duration (Minutes),Volume (Litres/ha),Soil Type\r\n";
+                pastWateringEvents.forEach(row => {
+                    csvContent += `${row.date},${row.crop},${row.duration_minutes},${row.volume_liters},"${row.soil}"\r\n`;
+                });
+                const link = document.createElement("a");
+                link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", "irrigation_history.csv");
+                link.click();
+            });
+            
+            populateTable();
+            renderChart();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemini Chatbot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Gemini Chatbot</h2>
+    <div id="chat-box" style="border:1px solid #ccc; padding:10px; height:300px; overflow:auto;"></div>
+    <input type="text" id="user-input" placeholder="Type a message..." style="width:80%;">
+    <button id="send-btn">Send</button>
+
+    <script>
+    $("#send-btn").click(function() {
+        let msg = $("#user-input").val();
+        if (msg.trim() === "") return;
+        $("#chat-box").append("<p><b>You:</b> " + msg + "</p>");
+        $.ajax({
+            url: "/gemini/chat",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({message: msg}),
+            success: function(data) {
+                $("#chat-box").append("<p><b>Gemini:</b> " + data.reply + "</p>");
+                $("#user-input").val("");
+                $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+            }
+        });
+    });
+    </script>
+</body>
+</html>

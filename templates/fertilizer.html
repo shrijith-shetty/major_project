@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fertilizer Recommendation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #a8e6cf, #dcedc1);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2d6a4f;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: 600;
+        }
+        .btn-success {
+            background-color: #2d6a4f;
+            border-color: #2d6a4f;
+        }
+        .btn-success:hover {
+            background-color: #1b4332;
+            border-color: #1b4332;
+        }
+        .result-card {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f1f8e9;
+            text-align: center;
+        }
+        .result-card h2 {
+           color: #1b4332;
+        }
+        .result-card p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h1>Fertilizer Recommendation</h1>
+
+        {% if fertilizer %}
+        <div class="result-card">
+            <h2>Recommended Fertilizer:</h2>
+            <p>{{ fertilizer }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" class="mt-4">
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nitrogen</label>
+                    <input type="number" name="Nitrogen" class="form-control" placeholder="e.g., 80" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Phosphorus</label>
+                    <input type="number" name="Phosphorus" class="form-control" placeholder="e.g., 50" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Potassium</label>
+                    <input type="number" name="Potassium" class="form-control" placeholder="e.g., 100" required>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">pH</label>
+                    <input type="number" step="0.1" name="pH" class="form-control" placeholder="e.g., 6.5" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Rainfall (mm)</label>
+                    <input type="number" name="Rainfall" class="form-control" placeholder="e.g., 1000" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Temperature (°C)</label>
+                    <input type="number" name="Temperature" class="form-control" placeholder="e.g., 20" required>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                    <label class="form-label">Soil Color</label>
+                    <select name="Soil_color" class="form-select" required>
+                        <option value="" disabled selected>-- Select Soil Color --</option>
+                        <option value="Black">Black</option>
+                        <option value="Red">Red</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Crop</label>
+                    <select name="Crop" class="form-select" required>
+                        <option value="" disabled selected>-- Select Crop --</option>
+                        <option value="Sugarcane">Sugarcane</option>
+                        <option value="Cotton">Cotton</option>
+                        <option value="Millets">Millets</option>
+                        <option value="Paddy">Paddy</option>
+                        <option value="Pulses">Pulses</option>
+                        <option value="Groundnut">Groundnut</option>
+                        <option value="Tobacco">Tobacco</option>
+                        <option value="Maize">Maize</option>
+                    </select>
+                </div>
+            </div>
+
+           <div class="text-center mt-4">
+               <button type="submit" class="btn btn-success btn-lg px-5">Get Recommendation</button>
+           </div>
+           <div class="text-center mt-2">
+               <a href="/" class="btn btn-secondary">Back to Home</a>
+           </div>
+
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

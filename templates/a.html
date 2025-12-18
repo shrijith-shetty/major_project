@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil & Water Management System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #2c5d63;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        button {
+            grid-column: 1 / -1; /* Span full width */
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 5px solid #4CAF50;
+            border-radius: 6px;
+            font-size: 1.1em;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌱 Soil Analysis & Water Management System</h1>
+
+        <div class="card">
+            <h2>Crop Recommendation</h2>
+            <form id="crop-form">
+                <div class="form-grid">
+                    <div class="form-group"><label for="crop-n">Nitrogen (N)</label><input type="number" id="crop-n" required></div>
+                    <div class="form-group"><label for="crop-p">Phosphorus (P)</label><input type="number" id="crop-p" required></div>
+                    <div class="form-group"><label for="crop-k">Potassium (K)</label><input type="number" id="crop-k" required></div>
+                    <div class="form-group"><label for="crop-temp">Temperature (°C)</label><input type="number" step="0.1" id="crop-temp" required></div>
+                    <div class="form-group"><label for="crop-humidity">Humidity (%)</label><input type="number" step="0.1" id="crop-humidity" required></div>
+                    <div class="form-group"><label for="crop-ph">pH Value</label><input type="number" step="0.1" id="crop-ph" required></div>
+                    <div class="form-group"><label for="crop-rainfall">Rainfall (mm)</label><input type="number" step="0.1" id="crop-rainfall" required></div>
+                </div>
+                <button type="submit">Recommend Crop</button>
+            </form>
+            <div class="result" id="crop-result"></div>
+        </div>
+
+        <div class="card">
+            <h2>Fertilizer Recommendation</h2>
+            <form id="fertilizer-form">
+                <div class="form-grid">
+                    <div class="form-group"><label for="fert-n">Nitrogen</label><input type="number" id="fert-n" required></div>
+                    <div class="form-group"><label for="fert-p">Phosphorus</label><input type="number" id="fert-p" required></div>
+                    <div class="form-group"><label for="fert-k">Potassium</label><input type="number" id="fert-k" required></div>
+                    <div class="form-group"><label for="fert-ph">pH</label><input type="number" step="0.1" id="fert-ph" required></div>
+                    <div class="form-group"><label for="fert-rainfall">Rainfall</label><input type="number" id="fert-rainfall" required></div>
+                    <div class="form-group"><label for="fert-temp">Temperature</label><input type="number" id="fert-temp" required></div>
+                    <div class="form-group">
+                        <label for="fert-soil">Soil Color</label>
+                        <select id="fert-soil" required><option value="Black">Black</option><option value="Red">Red</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fert-crop">Crop</label>
+                        <select id="fert-crop" required>
+                            <option value="Sugarcane">Sugarcane</option><option value="Cotton">Cotton</option><option value="Millets">Millets</option>
+                            <option value="Paddy">Paddy</option><option value="Pulses">Pulses</option><option value="Ragi">Ragi</option>
+                            <option value="Groundnut">Groundnut</option><option value="Maize">Maize</option><option value="Tobacco">Tobacco</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Recommend Fertilizer</button>
+            </form>
+            <div class="result" id="fertilizer-result"></div>
+        </div>
+        
+    </div>
+
+<script>
+    const API_BASE_URL = "http://127.0.0.1:5000";
+
+    // --- Crop Recommendation Form ---
+    document.getElementById('crop-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const resultDiv = document.getElementById('crop-result');
+
+        const payload = {
+            N: parseFloat(document.getElementById('crop-n').value),
+            P: parseFloat(document.getElementById('crop-p').value),
+            K: parseFloat(document.getElementById('crop-k').value),
+            temperature: parseFloat(document.getElementById('crop-temp').value),
+            humidity: parseFloat(document.getElementById('crop-humidity').value),
+            ph: parseFloat(document.getElementById('crop-ph').value),
+            rainfall: parseFloat(document.getElementById('crop-rainfall').value)
+        };
+
+        fetch(`${API_BASE_URL}/predict_crop`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultDiv.innerText = `Error: ${data.error}`;
+                resultDiv.style.backgroundColor = '#ffcdd2';
+                resultDiv.style.borderColor = '#f44336';
+            } else {
+                resultDiv.innerText = `Recommended Crop: ${data.recommended_crop}`;
+                resultDiv.style.backgroundColor = '#e8f5e9';
+                resultDiv.style.borderColor = '#4CAF50';
+            }
+            resultDiv.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultDiv.innerText = 'Failed to connect to the server.';
+            resultDiv.style.display = 'block';
+        });
+    });
+
+    // --- Fertilizer Recommendation Form ---
+    document.getElementById('fertilizer-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const resultDiv = document.getElementById('fertilizer-result');
+
+        const payload = {
+            Nitrogen: parseFloat(document.getElementById('fert-n').value),
+            Phosphorus: parseFloat(document.getElementById('fert-p').value),
+            Potassium: parseFloat(document.getElementById('fert-k').value),
+            pH: parseFloat(document.getElementById('fert-ph').value),
+            Rainfall: parseFloat(document.getElementById('fert-rainfall').value),
+            Temperature: parseFloat(document.getElementById('fert-temp').value),
+            "Soil_color": document.getElementById('fert-soil').value,
+            Crop: document.getElementById('fert-crop').value
+        };
+
+        fetch(`${API_BASE_URL}/predict_fertilizer`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultDiv.innerText = `Error: ${data.error}`;
+                resultDiv.style.backgroundColor = '#ffcdd2';
+                resultDiv.style.borderColor = '#f44336';
+            } else {
+                resultDiv.innerText = `Recommended Fertilizer: ${data.recommended_fertilizer}`;
+                resultDiv.style.backgroundColor = '#e8f5e9';
+                resultDiv.style.borderColor = '#4CAF50';
+            }
+            resultDiv.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultDiv.innerText = 'Failed to connect to the server.';
+            resultDiv.style.display = 'block';
+        });
+    });
+
+</script>
+</body>
+</html>
