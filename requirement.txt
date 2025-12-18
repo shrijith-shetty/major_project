@@ -1,0 +1,15 @@
+# Soil System Dashboard
+
+## Overview
+
+The Soil System Dashboard is an integrated web application designed to assist farmers and agricultural professionals in making informed decisions regarding crop selection, fertilizer recommendations, and irrigation management. The application leverages machine learning models to provide intelligent recommendations based on soil properties, environmental conditions, and crop requirements.
+
+### Features
+
+- **Crop Recommendation System**: Suggests optimal crops based on soil and environmental factors using a high-accuracy ensemble approach.
+- **Fertilizer Recommendation System**: Recommends appropriate fertilizers based on soil properties and intended crops using a stacking ensemble model.
+- **Irrigation Management**: Predicts the optimal volume of water required for irrigation events using a gradient boosting approach.
+- **Real-time Monitoring**: Displays real-time sensor data for temperature, humidity, pH, and nutrient levels.
+- **Motor Control**: Allows users to control irrigation pumps and set auto modes based on soil moisture levels.
+
+## Project Structure
