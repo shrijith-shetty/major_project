@@ -41,8 +41,8 @@ project/
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/shrijith-shetty/major_project/tree/main
+   cd major_project
    ```
 
 2. **Install required packages**:
